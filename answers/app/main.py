@@ -10,6 +10,7 @@ from .schemas import WeatherRecordBase, WeatherYearlyStatBase
 
 Base.metadata.create_all(bind=engine)
 
+# Create FastAPI application
 app = FastAPI(title="Weather API", version="1.0.0")
 
 
@@ -20,7 +21,15 @@ def get_db():
     finally:
         db.close()
 
+# -------------------------------------------------------
+#   Weather records endpoint
+# -------------------------------------------------------
 
+# Return raw daily weather records with optional filters.
+#     Supports filtering by:
+#     - station_id
+#     - date range (date_from, date_to)
+#Includes pagination via offset and limit.
 
 @app.get("/api/weather", response_model=List[WeatherRecordBase])
 def get_weather(
@@ -61,6 +70,15 @@ def get_weather(
         )
     return result
 
+# -------------------------------------------------------
+#   Yearly weather statistics endpoint
+# -------------------------------------------------------
+
+# Return yearly aggregated weather statistics.
+# Supports filtering by:
+# - station_id
+# - year
+# Includes pagination for large result sets.
 
 @app.get("/api/weather/stats", response_model=List[WeatherYearlyStatBase])
 def get_weather_stats(

@@ -6,18 +6,23 @@ from sqlalchemy import DateTime, ForeignKey
 
 Base = declarative_base()
 
+# -------------------------------------------------------
+#   Station data model
+# -------------------------------------------------------
 class Station(Base):
     __tablename__ = "stations"
 
     id = Column(Integer, primary_key=True, index=True)
     station_id = Column(String(50), unique=True, index=True, nullable=False)
-    state = Column(String(2), nullable=True)  # optional, from filename if you want ========================================
-    name = Column(String(100), nullable=True)
+    state = Column(String(2), nullable=True)                        # Optional metadata fields (not currently populated)
+    name = Column(String(100), nullable=True)                       # Optional metadata fields (not currently populated)
 
     weather_records = relationship("WeatherRecord", back_populates="station")
     yearly_stats = relationship("WeatherYearlyStat", back_populates="station")
 
-
+# -------------------------------------------------------
+#   Daily weather records model
+# -------------------------------------------------------
 class WeatherRecord(Base):
     __tablename__ = "weather_records"
 
@@ -39,7 +44,9 @@ class WeatherRecord(Base):
     )
 
 
-
+# -------------------------------------------------------
+#   Yearly aggregated weather statistics model
+# -------------------------------------------------------
 class WeatherYearlyStat(Base):
     __tablename__ = "weather_yearly_stats"
 

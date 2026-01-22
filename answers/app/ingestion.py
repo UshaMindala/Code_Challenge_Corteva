@@ -9,13 +9,25 @@ from sqlalchemy.orm import Session
 from .database import SessionLocal, engine
 from .models import Base, Station, WeatherRecord
 
+# Configure basic logging so ingestion progress and issues
+# are visible when running this script from the CLI or cron
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 logger = logging.getLogger(__name__)
 
+# """ functionality for below function """
+#     Parse a single line from a raw weather data file.
 
+#     Expected format (whitespace-separated): YYYYMMDD MAX MIN PRECIP
+
+#     Values are typically stored in tenths of units and may include -9999 as a missing-value flag.
+
+#     Returns:
+#         (date, max_temp_c, min_temp_c, precip_cm)
+#         or None if the line is malformed.
+#     """
 def parse_weather_line(line: str):
     parts = line.strip().split()
     if len(parts) != 4:
@@ -24,12 +36,14 @@ def parse_weather_line(line: str):
     # convert date
     date = datetime.strptime(raw_date, "%Y%m%d").date()
 
+# Convert temperature from tenths of °C to °C. Handles missing values encoded as -9999.
     def conv_temp(v):
         v = int(v)
         if v == -9999:
             return None
         return v / 10.0  # tenths of °C -> °C
-
+    
+# Convert precipitation from tenths of mm to cm. Handles missing values encoded as -9999.
     def conv_precip(v):
         v = int(v)
         if v == -9999:
@@ -45,20 +59,27 @@ def parse_weather_line(line: str):
     return date, max_c, min_c, precip_cm
 
 
+
+# Fetch an existing station by code, or create it if it does not already exist.
+# This ensures referential integrity before inserting weather records.
+  
 def get_or_create_station(db: Session, station_code: str):
     station = db.query(Station).filter_by(station_id=station_code).first()
     if station:
         return station
-    station = Station(station_id=station_code)
+    station = Station(station_id=station_code)  # Create a new station record if not found
     db.add(station)
     db.commit()
     db.refresh(station)
     return station
 
+# Ingest a single weather data file into the database.
+# The station code is inferred from the filename.
+# Returns: Number of successfully inserted weather records.
 
 def ingest_file(db: Session, filepath: str) -> int:
     filename = os.path.basename(filepath)
-    station_code, _ = os.path.splitext(filename)  # "USC0010XXXX"
+    station_code, _ = os.path.splitext(filename) 
     station = get_or_create_station(db, station_code)
 
     count = 0
@@ -79,12 +100,20 @@ def ingest_file(db: Session, filepath: str) -> int:
             )
             db.add(record)
             try:
-                db.commit()
+                db.commit()   # Commit per record so duplicates can be handled cleanly
                 count += 1
             except IntegrityError:
-                db.rollback()  # duplicate station+date, ignore
+                db.rollback()  # duplicate station + date, ignore
     return count
 
+
+
+# Ingest all weather data files from a directory.
+# This function:
+# - Ensures database tables exist
+# - Iterates over .txt files
+# - Logs progress and totals
+ 
 def ingest_all(wx_dir: str = "./wx_data"):
     Base.metadata.create_all(bind=engine)
 
