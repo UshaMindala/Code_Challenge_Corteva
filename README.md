@@ -128,9 +128,9 @@ Query raw daily weather records.
 
 **Query parameters:**
 
-- `station_id` (optional)  
-- `date_from` (optional, YYYY-MM-DD)  
-- `date_to` (optional, YYYY-MM-DD)  
+- `station_id`  
+- `date_from` (YYYY-MM-DD)  
+- `date_to` (YYYY-MM-DD)  
 - `offset` (default: 0)  
 - `limit` (default: 100, max: 1000)  
 
@@ -145,8 +145,8 @@ Query yearly aggregated weather statistics.
 
 **Query parameters:**
 
-- `station_id` (optional)  
-- `year` (optional)  
+- `station_id`   
+- `year`  
 - `offset` (default: 0)  
 - `limit` (default: 100, max: 1000)  
 
@@ -201,7 +201,7 @@ Query yearly aggregated weather statistics.
 ## Author
 
 **Ushasree Mindala**  
-Data Scientist / Data Engineer  
+Data Engineer  
 Expertise: ML, Geospatial and Climate Analytics, Data Engineering, Cloud Pipelines
 
 ## License
